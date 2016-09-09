@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+require "magica/all"
+Magica::Application.new.run
