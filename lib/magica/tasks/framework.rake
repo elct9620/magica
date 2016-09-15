@@ -1,2 +1,1 @@
-task :default do
-end
+task :default => :compile

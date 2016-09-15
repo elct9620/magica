@@ -1,18 +1,19 @@
-rule "compile" do |t|
-  FileUtils.remove_dir("build", true)
+task "compile" do |t|
   sources = FileList['src/**/*.cpp']
-  sources.each do |source|
-    dest = source.sub(/\.[^.]+$/, '.o').sub(/^src/, 'build')
-    FileUtils.mkdir_p File.dirname(dest)
-    sh "g++ #{source} -c -o #{dest}"
+
+  Magica.each_target do
+    FileUtils.rm_r("build", force: true)
+
+    objects = objfile(sources)
+
+    sources.each { |source| compile source }
+
+    task "after_compile" => objects do |task|
+      sh "g++ #{task.prerequisites.join(" ")} -o build/main"
+    end
   end
 end
 
-file "link" => ["compile"] do |t|
-  objects = FileList['build/**/*.o']
-  sh "g++ #{objects.join(" ")} -o build/main"
-end
-
-task "run" => ["link"] do |t|
+task "run" => ["after_compile"] do |t|
   sh "build/main"
 end
