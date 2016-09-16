@@ -27,7 +27,12 @@ module Magica
     def filename
     end
 
-    def exefile
+    def exefile(name)
+      if name.is_a?(Array)
+        name.flatten.map { |n| exefile(n) }
+      else
+        "#{name}"
+      end
     end
 
     def libfile
@@ -50,6 +55,12 @@ module Magica
     def compile(source)
       file objfile(source) => source do |t|
         @cxx.run t.name, t.prerequisites.first
+      end
+    end
+
+    def link(exec, objects)
+      task "build:#{@name}" => objects do
+        @linker.run "#{exec}", objects
       end
     end
   end

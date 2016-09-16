@@ -20,9 +20,7 @@ module Magica
         objects = objfile(@sources)
         @sources.each { |source| compile source }
 
-        task "build:#{@name}" => objects do
-          @linker.run "#{@dest}/main", objects
-        end
+        link exefile("#{@dest}/#{@name}"), objects
       }
     end
   end

@@ -1,1 +1,15 @@
 require "magica/build"
+
+# Define default toolchain
+# toolchain :gcc
+
+# Define Builder
+define_builder :main
+
+# Register Build Task
+build :main, {clean: true}
+
+task :run => "build:main" do
+  sh "build/main"
+end
+
