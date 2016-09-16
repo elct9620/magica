@@ -1,15 +1,29 @@
 module Magica
   class Builder
-
     include Rake::DSL
+
+    COMPILERS = %w(cxx)
+    COMMANDS = COMPILERS + %w(linker)
+
+    attr_accessor *COMMANDS.map(&:to_sym)
 
     def initialize(name = 'host', dest = 'build', &block)
       @name = name.to_s
       @dest = dest.to_s
-      @toolchain = Toolchain.toolchains.first[1]
+      @cxx = Command::Compiler.new(self, %w(.cpp))
+      @linker = Command::Linker.new(self)
 
       Magica.targets[@name] = self
       Magica.targets[@name].instance_eval(&block)
+    end
+
+    def filename
+    end
+
+    def exefile
+    end
+
+    def libfile
     end
 
     def objfile(name)
@@ -20,14 +34,15 @@ module Magica
       end
     end
 
-    def toolchain(name)
-      @toolchain = Toolchain.toolchains[name] || Toolchain.toolchains.first[1]
+    def toolchain(name, params = {})
+      toolchain = Toolchain.toolchains[name]
+      fail "Unknow #{name} toolchain" unless toolchain
+      toolchain.setup(self, params)
     end
 
     def compile(source)
       file objfile(source) => source do |t|
-        FileUtils.mkdir_p File.dirname(t.name)
-        @toolchain.compile t.name, t.prerequisites.first
+        @cxx.run t.name, t.prerequisites.first
       end
     end
   end

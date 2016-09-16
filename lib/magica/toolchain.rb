@@ -16,10 +16,6 @@ module Magica
       builder.instance_exec(builder, options, &@initializer)
     end
 
-    def compile(outfile, infile)
-      sh "g++ #{infile} -c -o #{outfile}"
-    end
-
     def self.load
       builtin_path = File.join(File.dirname(__FILE__), "toolchains")
       Dir.glob("#{builtin_path}/*.rake").each do |file|

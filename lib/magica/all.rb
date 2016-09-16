@@ -6,6 +6,10 @@ require "magica/toolchain"
 require "magica/builder"
 require "magica/application"
 
+require "magica/command"
+require "magica/commands/compiler"
+require "magica/commands/linker"
+
 module Magica
   class << self
     def targets
