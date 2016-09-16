@@ -15,7 +15,7 @@ module Magica
       @linker = Command::Linker.new(self)
 
       Magica.targets[@name] = self
-      Magica.targets[@name].instance_eval(&block) unless block.nil?
+      Magica.targets[@name].instance_eval(&block) unless block.nilk
 
       Magica.default_toolchain.setup(self, Magica.toolchain_params) if Magica.default_toolchain
     end
@@ -43,7 +43,7 @@ module Magica
 
     def toolchain(name, params = {})
       toolchain = Toolchain.toolchains[name]
-      fail "Unknow #{name} toolchain" unless toolchain
+      fail I18n.t("magica.unknow_toolchain", toolchain: name) unless toolchain
       toolchain.setup(self, params)
     end
 
