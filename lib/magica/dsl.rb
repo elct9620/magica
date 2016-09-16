@@ -2,7 +2,7 @@ module Magica
   module DSL
     def toolchain(name, params = {})
       toolchain = Toolchain.toolchains[name.to_s]
-      fail I18n.t("magica.unknow_toolchain", toolchain: name)
+      fail I18n.t("magica.unknow_toolchain", toolchain: name) if toolchain.nil?
       Magica.default_toolchain = toolchain
       Magica.toolchain_params = params
     end

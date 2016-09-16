@@ -5,7 +5,7 @@ module Magica
     COMPILERS = %w(cxx)
     COMMANDS = COMPILERS + %w(linker)
 
-    attr_accessor *COMMANDS.map(&:to_sym)
+    attr_block COMMANDS
 
     def initialize(name = 'host', dest = 'build', &block)
       @name = name.to_s
@@ -15,7 +15,7 @@ module Magica
       @linker = Command::Linker.new(self)
 
       Magica.targets[@name] = self
-      Magica.targets[@name].instance_eval(&block) unless block.nilk
+      Magica.targets[@name].instance_eval(&block) unless block.nil?
 
       Magica.default_toolchain.setup(self, Magica.toolchain_params) if Magica.default_toolchain
     end

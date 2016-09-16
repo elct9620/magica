@@ -1,5 +1,6 @@
 require "rake"
 
+require "magica/extension"
 require "magica/i18n"
 require "magica/dsl"
 require "magica/toolchain"
