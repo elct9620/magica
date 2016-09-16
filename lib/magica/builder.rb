@@ -10,11 +10,18 @@ module Magica
     def initialize(name = 'host', dest = 'build', &block)
       @name = name.to_s
       @dest = dest.to_s
+      @sources = FileList["src/**/*.cpp"]
       @cxx = Command::Compiler.new(self, %w(.cpp))
       @linker = Command::Linker.new(self)
 
       Magica.targets[@name] = self
-      Magica.targets[@name].instance_eval(&block)
+      Magica.targets[@name].instance_eval(&block) unless block.nil?
+
+      Magica.default_toolchain.setup(self, Magica.toolchain_params) if Magica.default_toolchain
+    end
+
+    def source(path)
+      @sources = FileList[path]
     end
 
     def filename
@@ -30,7 +37,7 @@ module Magica
       if name.is_a?(Array)
         name.flatten.map { |n| objfile(n) }
       else
-        "build/#{name}.o"
+        "#{@dest}/#{name}.o"
       end
     end
 

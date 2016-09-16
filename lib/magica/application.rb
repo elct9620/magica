@@ -26,7 +26,7 @@ module Magica
       unless File.exists?("Magicafile")
         @top_level_tasks.unshift(warning_not_init.to_s) unless default_tasks.include?(@top_level_tasks.first)
       end
-      @top_level_tasks.unshift("compile")
+      @top_level_tasks
     end
 
     private
