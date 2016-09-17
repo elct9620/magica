@@ -13,6 +13,11 @@ module Magica
       @sources = FileList["src/**/*.cpp"]
       @cxx = Command::Compiler.new(self, %w(.cpp))
       @linker = Command::Linker.new(self)
+      @defines = %w()
+      @include_paths = %w()
+      @libaries = %w()
+      @libary_paths = %w()
+      @flags = %w()
 
       Magica.targets[@name] = self
       Magica.targets[@name].instance_eval(&block) unless block.nil?
@@ -20,11 +25,29 @@ module Magica
       Magica.default_toolchain.setup(self, Magica.toolchain_params) if Magica.default_toolchain
     end
 
+    def define(name)
+      @defines << name.to_s.upcase
+    end
+
+    def include_path(path)
+      @include_paths << path.to_s
+    end
+
+    def flag(flag)
+      @flags << flag.to_s
+    end
+
+    def library(name, path)
+      @libaries << name.to_s
+      @libary_paths << path.to_s
+    end
+
     def source(path)
       @sources = FileList[path]
     end
 
-    def filename
+    def filename(name)
+      '"%s"' % name
     end
 
     def exefile(name)
@@ -54,13 +77,13 @@ module Magica
 
     def compile(source)
       file objfile(source) => source do |t|
-        @cxx.run t.name, t.prerequisites.first
+        @cxx.run t.name, t.prerequisites.first, @defines, @include_paths, @flags
       end
     end
 
     def link(exec, objects)
       task "build:#{@name}" => objects do
-        @linker.run "#{exec}", objects
+        @linker.run "#{exec}", objects, @libaries, @libary_paths, @flags
       end
     end
   end
