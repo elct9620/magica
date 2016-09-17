@@ -7,11 +7,28 @@ module Magica
 
       @command = ENV['LD'] || 'ld'
       @flags = (ENV['LDFLAGS'] || [])
-      @link_options = "%{flags} -o %{outfile} %{objects}"
+      @link_options = "%{flags} -o %{outfile} %{objects} %{libs}"
+      @libaries = []
+      @libary_paths = []
+
+      @option_libary = "-l%s"
+      @option_libary_path = "-L%s"
     end
 
-    def run(outfile, objects)
-      _run @link_options, { outfile: outfile, objects: objects.join(" "), flags: "" }
+    def combine_flags(_library_paths = [], _flags = [])
+      libary_paths = [@libary_paths, _library_paths].flatten.map { |path| @option_libary_path % filename(path) }
+      [flags, libary_paths, _flags].flatten.join(" ")
+    end
+
+    def run(outfile, objects, _libaries = [], _library_paths = [], _flags = [])
+      libary_flags = [@libaries, _libaries].flatten.map { |library| @option_libary % library }
+
+      _run @link_options, {
+        outfile: outfile,
+        objects: objects.join(" "),
+        libs: libary_flags.join(" "),
+        flags: combine_flags(_library_paths, _flags)
+      }
     end
   end
 end

@@ -15,6 +15,8 @@ module Magica
       @linker = Command::Linker.new(self)
       @defines = %w()
       @include_paths = %w()
+      @libaries = %w()
+      @libary_paths = %w()
       @flags = %w()
 
       Magica.targets[@name] = self
@@ -24,15 +26,20 @@ module Magica
     end
 
     def define(name)
-      @defines.push(name.to_s.upcase)
+      @defines << name.to_s.upcase
     end
 
     def include_path(path)
-      @include_paths.push(path.to_s)
+      @include_paths << path.to_s
     end
 
     def flag(flag)
-      @flags.push(flag.to_s)
+      @flags << flag.to_s
+    end
+
+    def library(name, path)
+      @libaries << name.to_s
+      @libary_paths << path.to_s
     end
 
     def source(path)
@@ -76,7 +83,7 @@ module Magica
 
     def link(exec, objects)
       task "build:#{@name}" => objects do
-        @linker.run "#{exec}", objects
+        @linker.run "#{exec}", objects, @libaries, @libary_paths, @flags
       end
     end
   end
