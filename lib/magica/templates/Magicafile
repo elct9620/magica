@@ -3,13 +3,15 @@ require "magica/build"
 # Define default toolchain
 # toolchain :gcc
 
-# Define Builder
-define_builder :main
-
-# Register Build Task
-build :main, {clean: true}
+# Define Build Task
+# build :main, {clean: true}
+build :main, {clean: true} do
+  # define :debug
+  # dynamic_library "sdl2"
+end
 
 task :run => "build:main" do
-  sh "build/main"
+  # Execute last build file
+  sh exefile
 end
 
