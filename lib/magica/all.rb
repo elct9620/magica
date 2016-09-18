@@ -1,6 +1,7 @@
 require "rake"
 
-require 'magica/package_config'
+require "magica/version"
+require "magica/package_config"
 require "magica/extension"
 require "magica/i18n"
 require "magica/dsl"

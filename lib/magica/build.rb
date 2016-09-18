@@ -21,7 +21,7 @@ module Magica
       @name = name.to_s
       @dest = (options[:dest] || 'build').to_s
       @sources = FileList["src/**/*.cpp"]
-      @options = options
+      @options = OpenStruct.new(options.merge(Rake.application.options.to_h))
 
       @exe_name = @name
       @exe_path = "bin"
