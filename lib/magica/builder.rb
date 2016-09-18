@@ -42,6 +42,15 @@ module Magica
       @libary_paths << path.to_s
     end
 
+    def dynamic_library(name)
+      config = PackageConfig[name]
+      @libaries.push(*config.libaries)
+      @libary_paths.push(*config.libary_paths)
+      @include_paths.push(*config.include_paths)
+      @defines.push(*config.defines)
+      @flags.push(*config.flags)
+    end
+
     def source(path)
       @sources = FileList[path]
     end
