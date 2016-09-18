@@ -17,7 +17,7 @@ module Magica
 
     def combine_flags(_library_paths = [], _flags = [])
       libary_paths = [@libary_paths, _library_paths].flatten.map { |path| @option_libary_path % filename(path) }
-      [flags, libary_paths, _flags].flatten.join(" ")
+      [flags, libary_paths, _flags].flatten.uniq.join(" ")
     end
 
     def run(outfile, objects, _libaries = [], _library_paths = [], _flags = [])
@@ -28,7 +28,7 @@ module Magica
       _run @link_options, {
         outfile: outfile,
         objects: objects.join(" "),
-        libs: libary_flags.join(" "),
+        libs: libary_flags.uniq.join(" "),
         flags: combine_flags(_library_paths, _flags)
       }
     end

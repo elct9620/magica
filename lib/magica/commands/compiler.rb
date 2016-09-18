@@ -19,7 +19,7 @@ module Magica
     def combine_flags(_defines = [], _include_paths = [], _flags = [])
       define_flags = [@defines, _defines].flatten.map { |define| @option_defines % define }
       include_path_flags = [@include_paths, _include_paths].flatten.map { |include_path| @option_include_path % filename(include_path) }
-      [define_flags, include_path_flags, _flags].flatten.join(' ')
+      [define_flags, include_path_flags, _flags].flatten.uniq.join(' ')
     end
 
     def run(outfile, infile, _defines = [], _include_paths = [], _flags = [])
