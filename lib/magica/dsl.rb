@@ -17,6 +17,10 @@ module Magica
       block = Magica.default_compile_task if block.nil?
       builder.instance_exec(options, &block)
     end
+
+    def exefile(name = nil)
+      Builder.current.exefile(name)
+    end
   end
 end
 

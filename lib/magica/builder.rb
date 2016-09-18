@@ -1,5 +1,9 @@
 module Magica
   class Builder
+    class << self
+      attr_accessor :current
+    end
+
     include Rake::DSL
 
     COMPILERS = %w(cxx)
@@ -119,12 +123,14 @@ module Magica
 
     def compile(source)
       file objfile(source) => source do |t|
+        Builder.current = Magica.targets[@name]
         @cxx.run t.name, t.prerequisites.first, @defines, @include_paths, @flags
       end
     end
 
     def link(exec, objects)
       task "build:#{@name}" => objects do
+        Builder.current = Magica.targets[@name]
         @linker.run "#{exec}", objects, @libaries, @libary_paths, @flags
       end
     end
