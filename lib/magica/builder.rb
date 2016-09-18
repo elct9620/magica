@@ -11,8 +11,13 @@ module Magica
       @name = name.to_s
       @dest = dest.to_s
       @sources = FileList["src/**/*.cpp"]
+
+      @exe_name = @name
+      @exe_path = "bin"
+
       @cxx = Command::Compiler.new(self, %w(.cpp))
       @linker = Command::Linker.new(self)
+
       @defines = %w()
       @include_paths = %w()
       @libaries = %w()
@@ -55,15 +60,28 @@ module Magica
       @sources = FileList[path]
     end
 
+    def dest(path)
+      @dest = path.to_s
+    end
+
     def filename(name)
       '"%s"' % name
     end
 
-    def exefile(name)
+    def exe_path(path)
+      @exe_path = path.to_s
+    end
+
+    def exe_name(name)
+      @exe_name = name.to_s
+    end
+
+    def exefile(name = nil)
+      return exefile(@exe_name) if name.nil?
       if name.is_a?(Array)
         name.flatten.map { |n| exefile(n) }
       else
-        "#{name}"
+        File.join(*[Magica.root, @exe_path, "#{name}"].flatten.reject(&:empty?))
       end
     end
 
@@ -74,8 +92,23 @@ module Magica
       if name.is_a?(Array)
         name.flatten.map { |n| objfile(n) }
       else
-        "#{@dest}/#{name}.o"
+        File.join(*[Magica.root, @dest, "#{name}.o"].flatten.reject(&:empty?))
       end
+    end
+
+    def clear_dest
+      path = File.join(*[Magica.root, @dest].flatten.reject(&:empty?))
+      FileUtils.rm_r(path, force: true)
+    end
+
+    def clear_exe
+      path = File.join(*[Magica.root, @exe_path].flatten.reject(&:empty?))
+      FileUtils.rm_r(path, force: true)
+    end
+
+    def clean
+      clear_dest
+      clear_exe
     end
 
     def toolchain(name, params = {})

@@ -13,14 +13,18 @@ module Magica
       end
     end
 
+    def root
+      Dir.pwd
+    end
+
     def default_compile_task
       proc { |options|
-        FileUtils.rm_r(@dest, force: true) if options[:clean]
+        clean if options[:clean]
 
         objects = objfile(@sources)
         @sources.each { |source| compile source }
 
-        link exefile("#{@dest}/#{@name}"), objects
+        link exefile, objects
       }
     end
   end
