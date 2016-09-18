@@ -137,6 +137,7 @@ module Magica
     end
 
     def link(exec, objects)
+      desc "Build target #{@name}'s executable file"
       task "build:#{@name}" => objects do
         Build.current = Magica.targets[@name]
         @linker.run "#{exec}", objects, @libaries, @libary_paths, @flags

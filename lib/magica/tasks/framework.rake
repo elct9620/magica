@@ -1,4 +1,4 @@
-task :default => :_all
+task default: :_all
 
 task :_all do |t|
   if Rake::Task.task_defined?(:all)
