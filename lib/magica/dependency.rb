@@ -22,7 +22,10 @@ module Magica
       @source = ""
       @version = nil
       @dir = "lib/#{@name}"
+      @install_dir = "#{@dir}/build"
       @build_command = "make"
+
+      @static_libraries = []
 
       Dependency[name] = self
       Dependency[name].instance_eval(&block)
@@ -40,12 +43,20 @@ module Magica
       @dir = _dir.to_s
     end
 
+    def install_dir(_dir)
+      @install_dir = _dir.to_s
+    end
+
     def version(_version)
       @version = _version.to_s
     end
 
     def command(_command)
       @build_command = _command.to_s
+    end
+
+    def static_library(*name)
+      @static_libraries.push(*name.flatten)
     end
 
     def build(builder)
@@ -55,6 +66,12 @@ module Magica
       Dir.chdir source_dir
       sh @build_command
       Dir.chdir root
+    end
+
+    def static_libraries
+      @static_libraries.map do |library|
+        File.join(*[Magica.root, @install_dir, library].flatten.reject(&:empty?))
+      end
     end
 
     private

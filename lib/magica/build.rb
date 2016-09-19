@@ -38,6 +38,7 @@ module Magica
       @flags = %w()
 
       @dependencies = []
+      @static_libraries = []
 
       Magica.targets[@name] = self
       Magica.targets[@name].instance_eval(&block) unless block.nil?
@@ -103,6 +104,7 @@ module Magica
         Dependency[name].build(self)
       end
       @dependencies << "#{@name}:dependency:#{name}"
+      @static_libraries.push(*Dependency[name].static_libraries)
     end
 
     def filename(name)
@@ -152,6 +154,10 @@ module Magica
       clear_exe
     end
 
+    def add(source)
+      FileUtils.cp(source, File.join(*[Magica.root, @dest].flatten.reject(&:empty?)))
+    end
+
     def toolchain(name, params = {})
       toolchain = Toolchain.toolchains[name]
       fail I18n.t("magica.unknow_toolchain", toolchain: name) unless toolchain
@@ -169,7 +175,7 @@ module Magica
       desc "Build target #{@name}'s executable file"
       task "build:#{@name}" => objects + @dependencies do
         Build.current = Magica.targets[@name]
-        @linker.run "#{exec}", objects, @libaries, @libary_paths, @flags
+        @linker.run "#{exec}", objects + @static_libraries, @libaries, @libary_paths, @flags
       end
     end
 
