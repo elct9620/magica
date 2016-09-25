@@ -25,6 +25,7 @@ module Magica
 
       libary_flags = [@libaries, _libaries].flatten.map { |library| @option_libary % library }
 
+      puts "LINK\t#{outfile}"
       _run @link_options, {
         outfile: outfile,
         objects: objects.join(" "),

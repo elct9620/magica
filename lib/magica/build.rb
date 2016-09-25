@@ -12,10 +12,13 @@ module Magica
 
     include Rake::DSL
 
-    COMPILERS = %w(cxx)
-    COMMANDS = COMPILERS + %w(linker)
+    COMPILERS = %w(cc cxx)
+    COMMANDS = COMPILERS + %w(linker git)
 
+    attr_reader :options
     attr_block COMMANDS
+
+    Exts = Struct.new(:object, :executable, :library)
 
     def initialize(name = 'host', options = {dest: 'build'}, &block)
       @name = name.to_s
@@ -26,14 +29,24 @@ module Magica
       @exe_name = @name
       @exe_path = "bin"
 
+      @exts = Exts.new('.o', '', '.a')
+
+      @cc = Command::Compiler.new(self, %w(.c))
       @cxx = Command::Compiler.new(self, %w(.cpp))
       @linker = Command::Linker.new(self)
+
+      @compiler = @cc
+
+      @git = Command::Git.new(self)
 
       @defines = %w()
       @include_paths = %w()
       @libaries = %w()
       @libary_paths = %w()
       @flags = %w()
+
+      @dependencies = []
+      @static_libraries = []
 
       Magica.targets[@name] = self
       Magica.targets[@name].instance_eval(&block) unless block.nil?
@@ -43,15 +56,30 @@ module Magica
     end
 
     def define(name)
-      @defines << name.to_s.upcase
+      if name.is_a?(Array)
+        name.flatten.map { |n| define(n) }
+      else
+        @defines<< name.to_s.upcase
+      end
+      @defines
     end
 
     def include_path(path)
-      @include_paths << path.to_s
+      if path.is_a?(Array)
+        path.flatten.map  { |p| include_path(p) }
+      else
+        @include_paths << path.to_s
+      end
+      @include_paths
     end
 
     def flag(flag)
-      @flags << flag.to_s
+      if flag.is_a?(Array)
+        flag.flatten.map { |f| flag(f) }
+      else
+        @flags << flag.to_s
+      end
+      @flags
     end
 
     def library(name, path)
@@ -63,9 +91,10 @@ module Magica
       config = PackageConfig[name]
       @libaries.push(*config.libaries)
       @libary_paths.push(*config.libary_paths)
-      @include_paths.push(*config.include_paths)
-      @defines.push(*config.defines)
-      @flags.push(*config.flags)
+
+      include_path(config.include_paths)
+      define(config.defines)
+      flag(config.flags)
     end
 
     def source(path)
@@ -74,6 +103,21 @@ module Magica
 
     def dest(path)
       @dest = path.to_s
+    end
+
+    def dependency(name, options = {}, &block)
+      Dependency.new(name, options, &block)
+      desc "The targets #{@name}'s dependency project : #{name}"
+      task "#{@name}:dependency:#{name}" do |t|
+        Dependency[name].build(self)
+      end
+      @dependencies << "#{@name}:dependency:#{name}"
+      @static_libraries.push(*Dependency[name].static_libraries)
+    end
+
+    def use(compiler)
+      return @compiler = self.send(compiler.to_s) if COMPILERS.include?(compiler.to_s)
+      @compiler = @cc
     end
 
     def filename(name)
@@ -89,11 +133,11 @@ module Magica
     end
 
     def exefile(name = nil)
-      return exefile(@exe_name) if name.nil?
+      return exefile("#{@exe_name}#{@exts.executable}") if name.nil?
       if name.is_a?(Array)
         name.flatten.map { |n| exefile(n) }
       else
-        File.join(*[Magica.root, @exe_path, "#{name}"].flatten.reject(&:empty?))
+        File.join(*[Magica.root, @exe_path, "#{name}#{@exts.executable}"].flatten.reject(&:empty?))
       end
     end
 
@@ -104,7 +148,7 @@ module Magica
       if name.is_a?(Array)
         name.flatten.map { |n| objfile(n) }
       else
-        File.join(*[Magica.root, @dest, "#{name}.o"].flatten.reject(&:empty?))
+        File.join(*[Magica.root, @dest, "#{name}#{@exts.object}"].flatten.reject(&:empty?))
       end
     end
 
@@ -123,6 +167,10 @@ module Magica
       clear_exe
     end
 
+    def add(source)
+      FileUtils.cp(source, File.join(*[Magica.root, @dest].flatten.reject(&:empty?)))
+    end
+
     def toolchain(name, params = {})
       toolchain = Toolchain.toolchains[name]
       fail I18n.t("magica.unknow_toolchain", toolchain: name) unless toolchain
@@ -132,15 +180,15 @@ module Magica
     def compile(source)
       file objfile(source) => source do |t|
         Build.current = Magica.targets[@name]
-        @cxx.run t.name, t.prerequisites.first, @defines, @include_paths, @flags
+        @compiler.run t.name, t.prerequisites.first, @defines, @include_paths, @flags
       end
     end
 
     def link(exec, objects)
       desc "Build target #{@name}'s executable file"
-      task "build:#{@name}" => objects do
+      task "build:#{@name}" => @dependencies + objects  do
         Build.current = Magica.targets[@name]
-        @linker.run "#{exec}", objects, @libaries, @libary_paths, @flags
+        @linker.run "#{exec}", objects + @static_libraries, @libaries, @libary_paths, @flags
       end
     end
 

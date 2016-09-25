@@ -24,6 +24,7 @@ module Magica
 
     def run(outfile, infile, _defines = [], _include_paths = [], _flags = [])
       FileUtils.mkdir_p File.dirname(outfile)
+      puts "COMPILE\t#{outfile}"
       _run @compile_options, { outfile: outfile, infile: infile, flags: combine_flags(_defines, _include_paths, _flags) }
     end
   end

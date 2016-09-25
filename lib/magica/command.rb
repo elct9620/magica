@@ -14,7 +14,7 @@ module Magica
 
     private
     def _run(options, params = {})
-      sh command + ' ' + (options % params)
+      sh command + ' ' + (options % params), verbose: false
     end
 
   end
