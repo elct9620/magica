@@ -41,8 +41,8 @@ module Magica
 
       @defines = %w()
       @include_paths = %w()
-      @libaries = %w()
-      @libary_paths = %w()
+      @libraries = %w()
+      @library_paths = %w()
       @flags = %w()
 
       @dependencies = []
@@ -83,14 +83,14 @@ module Magica
     end
 
     def library(name, path)
-      @libaries << name.to_s
-      @libary_paths << path.to_s
+      @libraries << name.to_s
+      @library_paths << path.to_s
     end
 
     def dynamic_library(name)
       config = PackageConfig[name]
-      @libaries.push(*config.libaries)
-      @libary_paths.push(*config.libary_paths)
+      @libraries.push(*config.libraries)
+      @library_paths.push(*config.library_paths)
 
       include_path(config.include_paths)
       define(config.defines)
@@ -188,7 +188,7 @@ module Magica
       desc "Build target #{@name}'s executable file"
       task "build:#{@name}" => @dependencies + objects  do
         Build.current = Magica.targets[@name]
-        @linker.run "#{exec}", objects + @static_libraries, @libaries, @libary_paths, @flags
+        @linker.run "#{exec}", objects + @static_libraries, @libraries, @library_paths, @flags
       end
     end
 

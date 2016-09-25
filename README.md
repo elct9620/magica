@@ -1,28 +1,60 @@
 # Magica
+[![Gem Version](https://badge.fury.io/rb/magica.svg)](https://badge.fury.io/rb/magica)
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/magica`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+Magica is a build script based on Rake, it helps you compile C and C++ project with easier way.
 
 ## Installation
-
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'magica'
-```
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
 
     $ gem install magica
 
 ## Usage
 
-TODO: Write usage instructions here
+Like Rake, you need a `Magicafile` to setup your build task.
+
+The magica provides `magica init` command helps your start your first project.
+
+### Build Task
+
+To define a new build task, you can use the `build` DSL to create it.
+
+`build :main`
+
+If you want to do more setting for your project, you can do like below.
+
+```ruby
+build :main do
+  dynamic_library "sdl2" # Use pkg-config to find dependency and add to build command
+  include_path "extra/include" # Add include path
+  define :debug # Add defines when build
+  flag "-Wall" # Add build flags
+  source "src/**/*.cpp" # Define source file, it will use FileList to scan it
+  dest "build" # Define the build files to place
+  use :cxx # If your project is C++ project, set it to use C++ compiler instead C compiler
+end
+```
+
+### Dependency
+
+If you have some 3rd-party library wants to include, the `dependency` can help you compile it.
+
+**WARNING**: Current only support git as version control
+
+```ruby
+build :main do
+  dependency :mruby do
+    source "git@github.com:mruby/mruby.git" # Define source
+    version "1.2.0" # Define version ( tag or branch )
+    command "./minirake" # The build command
+
+    env :MRUBY_CONFIG, File.join(Dir.pwd, 'mruby_config.rb') # Build environment variable
+
+    install_dir "#{@dir}/build/host/lib" # The compiled files path
+    static_library "libmruby.a", "libmruby_core.a" # The library name
+  end
+end
+```
+
+**NOTICE**: Current the build task will direct use install directory's file as link object.
 
 ## Development
 
@@ -32,5 +64,5 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/magica.
+Bug reports and pull requests are welcome on GitHub at https://github.com/elct9620/magica.
 
