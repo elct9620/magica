@@ -15,6 +15,7 @@ module Magica
     COMPILERS = %w(cc cxx)
     COMMANDS = COMPILERS + %w(linker git)
 
+    attr_reader :options
     attr_block COMMANDS
 
     Exts = Struct.new(:object, :executable, :library)

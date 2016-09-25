@@ -72,6 +72,9 @@ module Magica
       @vcs = builder.send(@command)
       clone
 
+      options = builder.send(:options)
+      clean if options[:clean_all]
+
       Dir.chdir source_dir
       sh @build_command
       Dir.chdir root
@@ -110,6 +113,10 @@ module Magica
       @environments.each do |name, value|
         ENV[name] = value
       end
+    end
+
+    def clean
+      FileUtils.rm_r(@install_dir, force: true)
     end
 
   end

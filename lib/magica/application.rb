@@ -44,7 +44,7 @@ module Magica
         switch =~ /--#{Regexp.union(not_applicable_to_capistrano)}/
       end
 
-      super.push(version, clean)
+      super.push(version, clean, clean_all)
     end
 
     def top_level_tasks
@@ -84,6 +84,15 @@ module Magica
        "Clean all files before build",
        lambda do |_value|
          options.clean = true
+       end]
+    end
+
+    def clean_all
+      ["--clean-all", nil,
+       "Clean all files before build include dependency",
+       lambda do |_value|
+         options.clean = true
+         options.clean_all = true
        end]
     end
   end
