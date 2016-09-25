@@ -34,6 +34,8 @@ module Magica
       @cxx = Command::Compiler.new(self, %w(.cpp))
       @linker = Command::Linker.new(self)
 
+      @compiler = @cc
+
       @git = Command::Git.new(self)
 
       @defines = %w()
@@ -112,6 +114,11 @@ module Magica
       @static_libraries.push(*Dependency[name].static_libraries)
     end
 
+    def use(compiler)
+      return @compiler = self.send(compiler.to_s) if COMPILERS.include?(compiler.to_s)
+      @compiler = @cc
+    end
+
     def filename(name)
       '"%s"' % name
     end
@@ -172,7 +179,7 @@ module Magica
     def compile(source)
       file objfile(source) => source do |t|
         Build.current = Magica.targets[@name]
-        @cxx.run t.name, t.prerequisites.first, @defines, @include_paths, @flags
+        @compiler.run t.name, t.prerequisites.first, @defines, @include_paths, @flags
       end
     end
 
