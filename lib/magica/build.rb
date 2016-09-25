@@ -12,10 +12,12 @@ module Magica
 
     include Rake::DSL
 
-    COMPILERS = %w(cxx)
+    COMPILERS = %w(cc cxx)
     COMMANDS = COMPILERS + %w(linker git)
 
     attr_block COMMANDS
+
+    Exts = Struct.new(:object, :executable, :library)
 
     def initialize(name = 'host', options = {dest: 'build'}, &block)
       @name = name.to_s
@@ -26,6 +28,9 @@ module Magica
       @exe_name = @name
       @exe_path = "bin"
 
+      @exts = Exts.new('.o', '', '.a')
+
+      @cc = Command::Compiler.new(self, %w(.c))
       @cxx = Command::Compiler.new(self, %w(.cpp))
       @linker = Command::Linker.new(self)
 
@@ -120,11 +125,11 @@ module Magica
     end
 
     def exefile(name = nil)
-      return exefile(@exe_name) if name.nil?
+      return exefile("#{@exe_name}#{@exts.executable}") if name.nil?
       if name.is_a?(Array)
         name.flatten.map { |n| exefile(n) }
       else
-        File.join(*[Magica.root, @exe_path, "#{name}"].flatten.reject(&:empty?))
+        File.join(*[Magica.root, @exe_path, "#{name}#{@exts.executable}"].flatten.reject(&:empty?))
       end
     end
 
@@ -135,7 +140,7 @@ module Magica
       if name.is_a?(Array)
         name.flatten.map { |n| objfile(n) }
       else
-        File.join(*[Magica.root, @dest, "#{name}.o"].flatten.reject(&:empty?))
+        File.join(*[Magica.root, @dest, "#{name}#{@exts.object}"].flatten.reject(&:empty?))
       end
     end
 
