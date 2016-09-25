@@ -9,8 +9,8 @@ module Magica
       @command = "git"
       @flags = %w[]
       @clone_options = "clone %{flags} %{url} %{dir}"
-      @pull_options = "pull %{remote} %{branch}"
-      @checkout_options = "checkout %{checksum_hash}"
+      @pull_options = "pull %{flags} %{remote} %{branch}"
+      @checkout_options = "checkout %{flags} %{checksum_hash}"
     end
 
     def clone(dir, url, _flags = [])
@@ -23,13 +23,13 @@ module Magica
 
     def pull(dir, remote = 'origin', branch = 'master')
       workin dir do
-        _run @pull_options % {remote: remote, branch: branch}
+        _run @pull_options % {remote: remote, branch: branch, flags: @flags.join(" ")}
       end
     end
 
     def checkout(dir, checksum_hash)
       workin dir do
-        _run @checkout_options % {checksum_hash: checksum_hash}
+        _run @checkout_options % {checksum_hash: checksum_hash, flags: @flags.join(" ")}
       end
     end
 

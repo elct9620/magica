@@ -108,7 +108,7 @@ module Magica
     def dependency(name, options = {}, &block)
       Dependency.new(name, options, &block)
       desc "The targets #{@name}'s dependency project : #{name}"
-      task "#{@name}:dependency:#{name}" do
+      task "#{@name}:dependency:#{name}" do |t|
         Dependency[name].build(self)
       end
       @dependencies << "#{@name}:dependency:#{name}"

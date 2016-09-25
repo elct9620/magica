@@ -70,13 +70,14 @@ module Magica
       setup_environment
 
       @vcs = builder.send(@command)
+      @vcs.flags = %w(--quiet)
       clone
 
       options = builder.send(:options)
       clean if options[:clean_all]
 
       Dir.chdir source_dir
-      sh @build_command
+      sh @build_command, verbose: false
       Dir.chdir root
     end
 
@@ -89,9 +90,11 @@ module Magica
     private
     def clone
       if Dir.exists?(source_dir)
+        puts "UPDATE DEPENDENCY\t#{@name}-#{@version}"
         checkout if @version
         pull
       else
+        puts "DOWNLOAD DEPENDENCY\t#{@name}-#{@version}"
         @vcs.clone(source_dir, @source)
         checkout if @version
       end
