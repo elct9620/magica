@@ -24,6 +24,7 @@ module Magica
       @dir = "lib/#{@name}"
       @install_dir = "#{@dir}/build"
       @build_command = "make"
+      @environments = {}
 
       @static_libraries = []
 
@@ -33,6 +34,10 @@ module Magica
 
     def use(name)
       @vcs = name.to_sym
+    end
+
+    def env(name, value)
+      @environments[name.to_s] = value
     end
 
     def source(_source)
@@ -61,8 +66,12 @@ module Magica
 
     def build(builder)
       root = Dir.pwd
+
+      setup_environment
+
       @vcs = builder.send(@command)
       clone
+
       Dir.chdir source_dir
       sh @build_command
       Dir.chdir root
@@ -95,6 +104,12 @@ module Magica
 
     def source_dir
       File.join(Magica.root, @dir)
+    end
+
+    def setup_environment
+      @environments.each do |name, value|
+        ENV[name] = value
+      end
     end
 
   end
