@@ -67,14 +67,16 @@ module Magica
     def build(builder)
       root = Dir.pwd
 
+      options = builder.send(:options)
+      clean if options[:clean_all]
+
+      return if !options[:clean_all] & File.exists?(@install_dir)
+
       setup_environment
 
       @vcs = builder.send(@command)
       @vcs.flags = %w(--quiet)
       clone
-
-      options = builder.send(:options)
-      clean if options[:clean_all]
 
       Dir.chdir source_dir
       sh @build_command, verbose: false

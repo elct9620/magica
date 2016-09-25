@@ -80,7 +80,7 @@ module Magica
     end
 
     def clean
-      ["--clean", nil,
+      ["--clean", "-c",
        "Clean all files before build",
        lambda do |_value|
          options.clean = true
@@ -88,7 +88,7 @@ module Magica
     end
 
     def clean_all
-      ["--clean-all", nil,
+      ["--clean-all", '-C',
        "Clean all files before build include dependency",
        lambda do |_value|
          options.clean = true
