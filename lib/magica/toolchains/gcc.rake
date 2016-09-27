@@ -5,7 +5,7 @@ Magica::Toolchain.new :gcc do |config, params|
   end
 
   config.cxx do |cxx|
-    cxx.command = [ENV['CXX'] || "g++"]
+    cxx.command = ENV['CXX'] || "g++"
     cxx.flags = [ENV['CXXFLAGS'] || %w(-g -O3 -Wall -Werror-implicit-function-declaration)]
   end
 
