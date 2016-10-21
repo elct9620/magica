@@ -84,7 +84,11 @@ module Magica
 
     def library(name, path)
       @libraries << name.to_s
-      @library_paths << path.to_s
+      @library_paths << path.to_s if path
+    end
+
+    def library_path(path)
+      @library_path << path.to_s
     end
 
     def dynamic_library(name)
