@@ -82,7 +82,7 @@ module Magica
       @flags
     end
 
-    def library(name, path)
+    def library(name, path = nil)
       @libraries << name.to_s
       @library_paths << path.to_s if path
     end
