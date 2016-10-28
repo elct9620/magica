@@ -21,6 +21,8 @@ module Magica
       proc { |options|
         clean if options[:clean]
 
+        do_target(options[:target])
+
         objects = objfile(@sources)
         @sources.each { |source| compile source }
 

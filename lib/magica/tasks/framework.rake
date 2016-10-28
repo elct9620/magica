@@ -5,7 +5,7 @@ task :_all do |t|
     Rake::Task[:all].invoke
   else
     Magica.each_build do
-      Rake::Task["build:#{@name}"].invoke
+      Rake::Task["#{@name}"].invoke
     end
   end
 end

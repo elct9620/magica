@@ -26,7 +26,6 @@ module Magica
       @sources = FileList["src/**/*.cpp"]
       @options = OpenStruct.new(options.merge(Rake.application.options.to_h))
       @default_target = nil
-      @current_target = nil
       @targets = {}
 
       @exe_name = @name
@@ -123,6 +122,10 @@ module Magica
       @sources = @sources.exclude(*patterns)
     end
 
+    def include(*patterns)
+      @sources = @sources.include(*patterns)
+    end
+
     def dest(path)
       @dest = path.to_s
     end
@@ -212,6 +215,15 @@ module Magica
         Build.current = Magica.builds[@name]
         @linker.run "#{exec}", objects + @static_libraries, @libraries, @library_paths, @flags
       end
+    end
+
+    def do_target(name = nil)
+      name ||= @default_target
+      return if name.nil?
+      target = @targets[name.to_sym]
+      @sources.clear_exclude # Reset exclude files
+      @exe_name = name.to_s.upcase
+      Magica.builds[@name].instance_eval(&target)
     end
 
     def build_task(&block)
