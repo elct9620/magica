@@ -55,11 +55,14 @@ module Magica
       Magica.default_toolchain.setup(self, Magica.toolchain_params) if Magica.default_toolchain
     end
 
-    def define(name)
+    def define(name, value = nil)
       if name.is_a?(Array)
-        name.flatten.map { |n| define(n) }
+        name.flatten.map { |n| define(n, value) }
       else
-        @defines<< name.to_s.upcase
+        _define = name.to_s.upcase
+        value = '\"%{value}\"' % {value: value} unless value.is_a?(Fixnum)
+        _define << "=#{value}" unless value.nil?
+        @defines << _define
       end
       @defines
     end
