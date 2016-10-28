@@ -38,13 +38,13 @@ module Magica
     end
 
     def sort_options(options)
-      not_applicable_to_capistrano = %w(verbose execute execute-continue libdir no-search rakefile rakelibdir require system no-system where no-deprecation-warnings)
+      not_applicable_to_magica = %w(verbose execute execute-continue libdir no-search rakefile rakelibdir require system no-system where no-deprecation-warnings)
 
       options.reject! do |(switch, *)|
-        switch =~ /--#{Regexp.union(not_applicable_to_capistrano)}/
+        switch =~ /--#{Regexp.union(not_applicable_to_magica)}/
       end
 
-      super.push(version, clean, clean_all)
+      super.push(version, clean, clean_all, target)
     end
 
     def top_level_tasks
@@ -93,6 +93,14 @@ module Magica
        lambda do |_value|
          options.clean = true
          options.clean_all = true
+       end]
+    end
+
+    def target
+      ["--target", '-t TARGET',
+       "Specify the build to use",
+       lambda do |_value|
+         options.target = _value
        end]
     end
   end

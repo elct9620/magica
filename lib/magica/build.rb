@@ -25,6 +25,9 @@ module Magica
       @dest = (options[:dest] || 'build').to_s
       @sources = FileList["src/**/*.cpp"]
       @options = OpenStruct.new(options.merge(Rake.application.options.to_h))
+      @default_target = nil
+      @config_block = block
+      @targets = {}
 
       @exe_name = @name
       @exe_path = "bin"
@@ -48,11 +51,19 @@ module Magica
       @dependencies = []
       @static_libraries = []
 
-      Magica.targets[@name] = self
-      Magica.targets[@name].instance_eval(&block) unless block.nil?
-      Magica.targets[@name].instance_exec(@options, &Magica.default_compile_task)
+      Magica.builds[@name] = self
+      Magica.builds[@name].instance_eval(&block) unless block.nil?
+      Magica.builds[@name].instance_exec(@options, &Magica.default_compile_task)
 
       Magica.default_toolchain.setup(self, Magica.toolchain_params) if Magica.default_toolchain
+    end
+
+    def target(name, **options, &block)
+      return if block.nil?
+      name = name.to_sym
+      @targets[name] = block
+      @default_target = name if options[:default]
+      Target.new("#{@name}:#{name}", @options.to_h.merge({target: name}), &@config_block) if Magica.const_defined?("Target")
     end
 
     def define(name, value = nil)
@@ -111,6 +122,10 @@ module Magica
 
     def exclude(*patterns)
       @sources = @sources.exclude(*patterns)
+    end
+
+    def include(*patterns)
+      @sources = @sources.include(*patterns)
     end
 
     def dest(path)
@@ -191,21 +206,30 @@ module Magica
 
     def compile(source)
       file objfile(source) => source do |t|
-        Build.current = Magica.targets[@name]
+        Build.current = Magica.builds[@name]
         @compiler.run t.name, t.prerequisites.first, @defines, @include_paths, @flags
       end
     end
 
     def link(exec, objects)
-      desc "Build target #{@name}'s executable file"
-      task "build:#{@name}" => @dependencies + objects  do
-        Build.current = Magica.targets[@name]
+      desc "Build #{@name}'s executable file"
+      task "#{@name}" => @dependencies + objects  do
+        Build.current = Magica.builds[@name]
         @linker.run "#{exec}", objects + @static_libraries, @libraries, @library_paths, @flags
       end
     end
 
+    def do_target(name = nil)
+      name ||= @default_target
+      return if name.nil?
+      target = @targets[name.to_sym]
+      @sources.clear_exclude # Reset exclude files
+      @exe_name = name.to_s.capitalize
+      Magica.builds[@name].instance_eval(&target) unless target.nil?
+    end
+
     def build_task(&block)
-      Magica.targets[@name].instance_eval(@options, &block)
+      Magica.builds[@name].instance_eval(@options, &block)
     end
   end
 end
