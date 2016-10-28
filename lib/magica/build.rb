@@ -26,6 +26,7 @@ module Magica
       @sources = FileList["src/**/*.cpp"]
       @options = OpenStruct.new(options.merge(Rake.application.options.to_h))
       @default_target = nil
+      @config_block = block
       @targets = {}
 
       @exe_name = @name
@@ -62,6 +63,7 @@ module Magica
       name = name.to_sym
       @targets[name] = block
       @default_target = name if options[:default]
+      Target.new("#{@name}:#{name}", @options.to_h.merge({target: name}), &@config_block) if Magica.const_defined?("Target")
     end
 
     def define(name, value = nil)
@@ -222,8 +224,8 @@ module Magica
       return if name.nil?
       target = @targets[name.to_sym]
       @sources.clear_exclude # Reset exclude files
-      @exe_name = name.to_s.upcase
-      Magica.builds[@name].instance_eval(&target)
+      @exe_name = name.to_s.capitalize
+      Magica.builds[@name].instance_eval(&target) unless target.nil?
     end
 
     def build_task(&block)

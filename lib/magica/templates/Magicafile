@@ -1,4 +1,5 @@
 require "magica/build"
+require "magica/target"
 
 # Define default toolchain
 # toolchain :gcc
@@ -8,6 +9,18 @@ require "magica/build"
 build :main, {clean: true} do
   # define :debug
   # dynamic_library "sdl2"
+
+  # dependency :mruby do
+  #   source "git@github.com:mruby/mruby.git"
+  #   version "1.2.0"
+  #   command "./minirake -quiet"
+  #
+  #   static_library "libmruby.a"
+  # end
+
+  # target :test do
+  #   exclude('src/Main.cpp')
+  # end
 end
 
 task :run => "build:main" do
