@@ -25,6 +25,9 @@ module Magica
       @dest = (options[:dest] || 'build').to_s
       @sources = FileList["src/**/*.cpp"]
       @options = OpenStruct.new(options.merge(Rake.application.options.to_h))
+      @default_target = nil
+      @current_target = nil
+      @targets = {}
 
       @exe_name = @name
       @exe_path = "bin"
@@ -48,11 +51,18 @@ module Magica
       @dependencies = []
       @static_libraries = []
 
-      Magica.targets[@name] = self
-      Magica.targets[@name].instance_eval(&block) unless block.nil?
-      Magica.targets[@name].instance_exec(@options, &Magica.default_compile_task)
+      Magica.builds[@name] = self
+      Magica.builds[@name].instance_eval(&block) unless block.nil?
+      Magica.builds[@name].instance_exec(@options, &Magica.default_compile_task)
 
       Magica.default_toolchain.setup(self, Magica.toolchain_params) if Magica.default_toolchain
+    end
+
+    def target(name, **options, &block)
+      return if block.nil?
+      name = name.to_sym
+      @targets[name] = block
+      @default_target = name if options[:default]
     end
 
     def define(name, value = nil)
@@ -191,21 +201,21 @@ module Magica
 
     def compile(source)
       file objfile(source) => source do |t|
-        Build.current = Magica.targets[@name]
+        Build.current = Magica.builds[@name]
         @compiler.run t.name, t.prerequisites.first, @defines, @include_paths, @flags
       end
     end
 
     def link(exec, objects)
-      desc "Build target #{@name}'s executable file"
-      task "build:#{@name}" => @dependencies + objects  do
-        Build.current = Magica.targets[@name]
+      desc "Build #{@name}'s executable file"
+      task "#{@name}:#{@current_target}" => @dependencies + objects  do
+        Build.current = Magica.builds[@name]
         @linker.run "#{exec}", objects + @static_libraries, @libraries, @library_paths, @flags
       end
     end
 
     def build_task(&block)
-      Magica.targets[@name].instance_eval(@options, &block)
+      Magica.builds[@name].instance_eval(@options, &block)
     end
   end
 end
