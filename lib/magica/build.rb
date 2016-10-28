@@ -211,7 +211,7 @@ module Magica
 
     def link(exec, objects)
       desc "Build #{@name}'s executable file"
-      task "#{@name}:#{@current_target}" => @dependencies + objects  do
+      task "#{@name}" => @dependencies + objects  do
         Build.current = Magica.builds[@name]
         @linker.run "#{exec}", objects + @static_libraries, @libraries, @library_paths, @flags
       end
