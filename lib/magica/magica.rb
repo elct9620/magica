@@ -2,14 +2,14 @@ module Magica
   class << self
     attr_accessor :default_toolchain, :toolchain_params
 
-    def targets
-      @targets ||= {}
+    def builds
+      @builds ||= {}
     end
 
-    def each_target(&block)
-      return to_enum(:each_target) if block.nil?
-      @targets.each do |key, target|
-        target.instance_eval(&block)
+    def each_build(&block)
+      return to_enum(:each_build) if block.nil?
+      @builds.each do |key, build|
+        build.instance_eval(&block)
       end
     end
 
@@ -20,6 +20,8 @@ module Magica
     def default_compile_task
       proc { |options|
         clean if options[:clean]
+
+        do_target(options[:target])
 
         objects = objfile(@sources)
         @sources.each { |source| compile source }
