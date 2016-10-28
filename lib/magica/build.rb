@@ -101,8 +101,13 @@ module Magica
       flag(config.flags)
     end
 
-    def source(path)
-      @sources = FileList[path]
+    def source(*paths, **options)
+      @sources = FileList.new(*paths)
+      @sources = @sources.exclude(options[:exclude]) if options[:exclude]
+    end
+
+    def exclude(*patterns)
+      @sources = @sources.exclude(*patterns)
     end
 
     def dest(path)
