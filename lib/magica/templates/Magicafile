@@ -23,7 +23,7 @@ build :main, {clean: true} do
   # end
 end
 
-task :run => "build:main" do
+task :run => "main" do
   # Execute last build file
   sh exefile
 end
