@@ -2,7 +2,7 @@ require "magica/build"
 require "magica/target"
 
 # Define default toolchain
-# toolchain :gcc
+toolchain :gcc
 
 # Define Build Task
 # build :main, {clean: true}
@@ -23,7 +23,7 @@ build :main, {clean: true} do
   # end
 end
 
-task :run => "build:main" do
+task :run => "main" do
   # Execute last build file
   sh exefile
 end
