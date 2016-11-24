@@ -2,7 +2,7 @@ require "magica/build"
 require "magica/target"
 
 # Define default toolchain
-# toolchain :gcc
+toolchain :gcc
 
 # Define Build Task
 # build :main, {clean: true}
