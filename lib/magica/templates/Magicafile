@@ -5,7 +5,6 @@ require "magica/target"
 toolchain :gcc
 
 # Define Build Task
-# build :main, {clean: true}
 build :main, {clean: true} do
   # define :debug
   # dynamic_library "sdl2"
@@ -13,8 +12,9 @@ build :main, {clean: true} do
   # dependency :mruby do
   #   source "git@github.com:mruby/mruby.git"
   #   version "1.2.0"
-  #   command "./minirake -quiet"
+  #   command "./minirake --quiet"
   #
+  #   install_dir "#{@dir}/build/host/lib"
   #   static_library "libmruby.a"
   # end
 
