@@ -73,7 +73,7 @@ module Magica
       return if !options[:clean_all] & File.exist?(@install_dir)
 
       setup_environment
-      clone
+      clone(builder)
       exec
     end
 
@@ -94,11 +94,11 @@ module Magica
       Dir.chdir root
     end
 
-    def clone
+    def clone(builder)
       @vcs = builder.send(@command)
       @vcs.flags = %w[--quiet]
 
-      puts "UPDATE DEPENDENCY #{[@name, @version].join(' ')}"
+      puts "UPDATE DEPENDENCY\t #{[@name, @version].join(' ')}"
 
       if Dir.exist?(source_dir)
         checkout if @version
