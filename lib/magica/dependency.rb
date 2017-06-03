@@ -1,4 +1,5 @@
 module Magica
+  # :nodoc:
   class Dependency
     class << self
       def [](name)
@@ -14,16 +15,16 @@ module Magica
 
     include Rake::DSL
 
-    def initialize(name, options = {}, &block)
-
+    # rubocop:disable Metrics/MethodLength
+    def initialize(name, _options = {}, &block)
       @name = name.to_s
       @vcs = nil
       @command = :git
-      @source = ""
+      @source = ''
       @version = nil
       @dir = "lib/#{@name}"
       @install_dir = "#{@dir}/build"
-      @build_command = "make"
+      @build_command = 'make'
       @environments = {}
 
       @static_libraries = []
@@ -31,6 +32,7 @@ module Magica
       Dependency[name] = self
       Dependency[name].instance_eval(&block)
     end
+    # rubocop:enable Metrics/MethodLength
 
     def use(name)
       @vcs = name.to_sym
@@ -40,24 +42,24 @@ module Magica
       @environments[name.to_s] = value
     end
 
-    def source(_source)
-      @source = _source.to_s
+    def source(source)
+      @source = source.to_s
     end
 
-    def dir(_dir)
-      @dir = _dir.to_s
+    def dir(dir)
+      @dir = dir.to_s
     end
 
-    def install_dir(_dir)
-      @install_dir = _dir.to_s
+    def install_dir(dir)
+      @install_dir = dir.to_s
     end
 
-    def version(_version)
-      @version = _version.to_s
+    def version(version)
+      @version = version.to_s
     end
 
-    def command(_command)
-      @build_command = _command.to_s
+    def command(command)
+      @build_command = command.to_s
     end
 
     def static_library(*name)
@@ -65,38 +67,43 @@ module Magica
     end
 
     def build(builder)
-      root = Dir.pwd
-
       options = builder.send(:options)
       clean if options[:clean_all]
 
-      return if !options[:clean_all] & File.exists?(@install_dir)
+      return if !options[:clean_all] & File.exist?(@install_dir)
 
       setup_environment
-
-      @vcs = builder.send(@command)
-      @vcs.flags = %w(--quiet)
       clone
+      exec
+    end
 
+    def static_libraries
+      @static_libraries.map do |library|
+        File.join(*[
+          Magica.root, @install_dir, library
+        ].flatten.reject(&:empty?))
+      end
+    end
+
+    private
+
+    def exec
+      root = Dir.pwd
       Dir.chdir source_dir
       sh @build_command, verbose: false
       Dir.chdir root
     end
 
-    def static_libraries
-      @static_libraries.map do |library|
-        File.join(*[Magica.root, @install_dir, library].flatten.reject(&:empty?))
-      end
-    end
-
-    private
     def clone
-      if Dir.exists?(source_dir)
-        puts "UPDATE DEPENDENCY\t#{@name}-#{@version}"
+      @vcs = builder.send(@command)
+      @vcs.flags = %w[--quiet]
+
+      puts "UPDATE DEPENDENCY #{[@name, @version].join(' ')}"
+
+      if Dir.exist?(source_dir)
         checkout if @version
         pull
       else
-        puts "DOWNLOAD DEPENDENCY\t#{@name}-#{@version}"
         @vcs.clone(source_dir, @source)
         checkout if @version
       end
@@ -123,6 +130,5 @@ module Magica
     def clean
       FileUtils.rm_r(@install_dir, force: true)
     end
-
   end
 end

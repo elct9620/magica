@@ -1,4 +1,5 @@
 module Magica
+  # :nodoc:
   class PackageConfig
     class << self
       def [](name)
@@ -16,23 +17,45 @@ module Magica
     DEFINE_RULE = /-D([^\s]+)/
     FLAG_RULE = /-[^ID][^\s]+/
 
-    attr_reader :library_paths, :libraries, :library_flags, :include_paths, :defines, :flags
+    attr_reader :library_paths, :libraries, :library_flags,
+                :include_paths, :defines, :flags, :version
 
     def initialize(name)
-      fail "Cannot found library #{name}" unless system "pkg-config --exists #{name}"
+      raise "Cannot found library #{name}" unless package_exist?(name)
+      @name = name
 
-      @package_libraries = `pkg-config --libs #{name}`.strip
+      @package_libraries = `pkg-config --libs #{@name}`.strip
+      @package_cflags = `pkg-config --cflags #{@name}`.strip
 
-      @library_paths = @package_libraries.scan(LIBRARY_PATH_RULE).flatten
-      @libraries = @package_libraries.scan(LIBRARY_RULE).flatten
-      @library_flags = @package_libraries.scan(LIBRARY_FLAG_RULE).flatten
+      @version = `pkg-config --modversion #{@name}`.strip
+    end
 
-      @package_cflags = `pkg-config --cflags #{name}`.strip
-      @include_paths = @package_cflags.scan(INCLUDE_RULE).flatten
-      @defines = @package_cflags.scan(DEFINE_RULE).flatten
-      @flags = @package_cflags.scan(FLAG_RULE).flatten
+    def package_exist?(name)
+      system "pkg-config --exists #{name}"
+    end
 
-      @version = `pkg-config --modversion #{name}`.strip
+    def libraries
+      @libraries ||= @package_libraries.scan(LIBRARY_RULE).flatten
+    end
+
+    def library_flags
+      @library_flags ||= @package_libraries.scan(LIBRARY_FLAG_RULE).flatten
+    end
+
+    def library_paths
+      @library_paths ||= @package_libraries.scan(LIBRARY_PATH_RULE).flatten
+    end
+
+    def flags
+      @flags ||= @package_cflags.scan(FLAG_RULE).flatten
+    end
+
+    def defines
+      @defines ||= @package_cflags.scan(DEFINE_RULE).flatten
+    end
+
+    def include_paths
+      @include_paths ||= @package_cflags.scan(INCLUDE_RULE).flatten
     end
   end
 end

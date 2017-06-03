@@ -1,10 +1,12 @@
 include Magica::DSL
 
-require "magica/framework"
+require 'magica/framework'
 
-load File.expand_path("../tasks/build.rake", __FILE__)
-
+# rubocop:disable Metrics/ClassLength
+# rubocop:disable Metrics/LineLength
+# rubocop:disable Metrics/MethodLength
 module Magica
+  # :nodoc:
   class Build
     class << self
       attr_accessor :current
@@ -12,41 +14,42 @@ module Magica
 
     include Rake::DSL
 
-    COMPILERS = %w(cc cxx)
-    COMMANDS = COMPILERS + %w(linker git)
+    COMPILERS = %w[cc cxx].freeze
+    COMMANDS = COMPILERS + %w[linker git]
 
     attr_reader :options, :defines, :include_paths, :flags
     attr_block COMMANDS
 
     Exts = Struct.new(:object, :executable, :library)
 
-    def initialize(name = 'host', options = {dest: 'build'}, &block)
+    # rubocop:disable Metrics/AbcSize
+    def initialize(name = 'host', options = { dest: 'build' }, &block)
       @name = name.to_s
       @dest = (options[:dest] || 'build').to_s
-      @sources = FileList["src/**/*.cpp"]
+      @sources = FileList['src/**/*.cpp']
       @options = OpenStruct.new(options.merge(Rake.application.options.to_h))
       @default_target = nil
       @config_block = block
       @targets = {}
 
       @exe_name = @name
-      @exe_path = "bin"
+      @exe_path = 'bin'
 
       @exts = Exts.new('.o', '', '.a')
 
-      @cc = Command::Compiler.new(self, %w(.c))
-      @cxx = Command::Compiler.new(self, %w(.cpp))
+      @cc = Command::Compiler.new(self, %w[.c])
+      @cxx = Command::Compiler.new(self, %w[.cpp])
       @linker = Command::Linker.new(self)
 
       @compiler = @cc
 
       @git = Command::Git.new(self)
 
-      @defines = %w()
-      @include_paths = %w()
-      @libraries = %w()
-      @library_paths = %w()
-      @flags = %w()
+      @defines = %w[]
+      @include_paths = %w[]
+      @libraries = %w[]
+      @library_paths = %w[]
+      @flags = %w[]
 
       @dependencies = []
       @static_libraries = []
@@ -57,32 +60,35 @@ module Magica
 
       Magica.default_toolchain.setup(self, Magica.toolchain_params) if Magica.default_toolchain
     end
+    # rubocop:enable Metrics/AbcSize
 
     def target(name, **options, &block)
       return if block.nil?
       name = name.to_sym
       @targets[name] = block
       @default_target = name if options[:default]
-      Target.new("#{@name}:#{name}", @options.to_h.merge({target: name}), &@config_block) if Magica.const_defined?("Target")
+      Target.new("#{@name}:#{name}", @options.to_h.merge(target: name), &@config_block) if Magica.const_defined?('Target')
     end
 
     def define(name, value = nil)
       if name.is_a?(Array)
         name.flatten.map { |n| define(n, value) }
       else
-        _define = name.to_s.upcase
-        value = '\"%{value}\"' % {value: value} unless value.is_a?(Numeric)
-        _define << "=#{value}" unless value.nil?
-        @defines << _define
+        define_name = name.to_s.upcase
+        unless value.nil? || value.is_a?(Numeric)
+          value = format('\"%s\"', value)
+        end
+        define_name << "=#{value}" unless value.nil?
+        @defines.push(define_name)
       end
-      @defines
+      @defines.uniq!
     end
 
     def include_path(path)
       if path.is_a?(Array)
-        path.flatten.map  { |p| include_path(p) }
+        path.flatten.map { |p| include_path(p) }
       else
-        @include_paths << path.to_s
+        @include_paths.push(path.to_s)
       end
       @include_paths
     end
@@ -91,24 +97,24 @@ module Magica
       if flag.is_a?(Array)
         flag.flatten.map { |f| flag(f) }
       else
-        @flags << flag.to_s
+        @flags.push(flag.to_s)
       end
       @flags
     end
 
     def library(name, path = nil)
-      @libraries << name.to_s
-      @library_paths << path.to_s if path
+      @libraries.push(name.to_s).uniq!
+      @library_paths.push(path.to_s).uniq! if path
     end
 
     def library_path(path)
-      @library_path << path.to_s
+      @library_paths.push(path.to_s).uniq!
     end
 
     def dynamic_library(name)
       config = PackageConfig[name]
-      @libraries.push(*config.libraries)
-      @library_paths.push(*config.library_paths)
+      @libraries.push(*config.libraries).uniq!
+      @library_paths.push(*config.library_paths).uniq!
 
       include_path(config.include_paths)
       define(config.defines)
@@ -135,7 +141,7 @@ module Magica
     def dependency(name, options = {}, &block)
       Dependency.new(name, options, &block)
       desc "The targets #{@name}'s dependency project : #{name}"
-      task "#{@name}:dependency:#{name}" do |t|
+      task "#{@name}:dependency:#{name}" do
         Dependency[name].build(self)
       end
       @dependencies << "#{@name}:dependency:#{name}"
@@ -143,12 +149,12 @@ module Magica
     end
 
     def use(compiler)
-      return @compiler = self.send(compiler.to_s) if COMPILERS.include?(compiler.to_s)
+      return @compiler = send(compiler.to_s) if COMPILERS.include?(compiler.to_s)
       @compiler = @cc
     end
 
     def filename(name)
-      '"%s"' % name
+      format('"%s"', name)
     end
 
     def exe_path(path)
@@ -164,18 +170,21 @@ module Magica
       if name.is_a?(Array)
         name.flatten.map { |n| exefile(n) }
       else
-        File.join(*[Magica.root, @exe_path, "#{name}#{@exts.executable}"].flatten.reject(&:empty?))
+        File.join(
+          *[Magica.root, @exe_path, "#{name}#{@exts.executable}"]
+          .flatten.reject(&:empty?)
+        )
       end
-    end
-
-    def libfile
     end
 
     def objfile(name)
       if name.is_a?(Array)
         name.flatten.map { |n| objfile(n) }
       else
-        File.join(*[Magica.root, @dest, "#{name}#{@exts.object}"].flatten.reject(&:empty?))
+        File.join(
+          *[Magica.root, @dest, "#{name}#{@exts.object}"]
+          .flatten.reject(&:empty?)
+        )
       end
     end
 
@@ -195,28 +204,43 @@ module Magica
     end
 
     def add(source)
-      FileUtils.cp(source, File.join(*[Magica.root, @dest].flatten.reject(&:empty?)))
+      FileUtils.cp(
+        source,
+        File.join(*[Magica.root, @dest].flatten.reject(&:empty?))
+      )
     end
 
     def toolchain(name, params = {})
       toolchain = Toolchain.toolchains[name]
-      fail I18n.t("magica.unknow_toolchain", toolchain: name) unless toolchain
+      raise I18n.t('magica.unknow_toolchain', toolchain: name) unless toolchain
       toolchain.setup(self, params)
     end
 
     def compile(source)
       return if Rake::Task.task_defined?(objfile(source))
       file objfile(source) => source do |t|
-        @compiler.run t.name, t.prerequisites.first, Build.current.defines, Build.current.include_paths, Build.current.flags
+        @compiler.run(
+          t.name,
+          t.prerequisites.first,
+          Build.current.defines,
+          Build.current.include_paths,
+          Build.current.flags
+        )
       end
     end
 
     def link(exec, objects)
       desc "Build #{@name}'s executable file"
-      task "#{@name}" do
+      task @name.to_s do
         Build.current = Magica.builds[@name]
         task "#{@name}:build" => @dependencies + objects do
-          @linker.run "#{exec}", objects + @static_libraries, @libraries, @library_paths, @flags
+          @linker.run(
+            exec.to_s,
+            objects + @static_libraries,
+            @libraries,
+            @library_paths,
+            @flags
+          )
         end.invoke
       end
     end

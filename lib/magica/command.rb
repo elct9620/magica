@@ -1,6 +1,7 @@
 require 'forwardable'
 
 module Magica
+  # :nodoc:
   class Command
     include Rake::DSL
     extend Forwardable
@@ -13,9 +14,9 @@ module Magica
     end
 
     private
+
     def _run(options, params = {})
       sh command + ' ' + (options % params), verbose: false
     end
-
   end
 end

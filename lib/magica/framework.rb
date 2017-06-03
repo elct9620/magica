@@ -1,2 +1,2 @@
-load File.expand_path("../tasks/framework.rake", __FILE__)
-require "magica/initialize"
+load File.expand_path('../tasks/framework.rake', __FILE__)
+require 'magica/initialize'

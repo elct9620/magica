@@ -1,8 +1,9 @@
 include Magica::DSL
 
-require "magica/framework"
+require 'magica/framework'
 
 module Magica
+  # :nodoc:
   class Target < Build
     def target(name, **options, &block)
       return if block.nil?
@@ -13,7 +14,7 @@ module Magica
 
     def dependency(name, options = {}, &block)
       Dependency.new(name, options, &block)
-      task "#{@name}:dependency:#{name}" do |t|
+      task "#{@name}:dependency:#{name}" do
         Dependency[name].build(self)
       end
       @dependencies << "#{@name}:dependency:#{name}"

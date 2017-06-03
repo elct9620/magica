@@ -1,4 +1,6 @@
+# :nodoc:
 module Magica
+  # :nodoc:
   class Toolchain
     include Rake::DSL
 
@@ -7,7 +9,8 @@ module Magica
     end
 
     def initialize(name, &block)
-      @name, @initializer = name.to_s, block
+      @name = name.to_s
+      @initializer = block
       Toolchain.toolchains ||= {}
       Toolchain.toolchains[@name] = self
     end
@@ -17,7 +20,7 @@ module Magica
     end
 
     def self.load
-      builtin_path = File.join(File.dirname(__FILE__), "toolchains")
+      builtin_path = File.join(File.dirname(__FILE__), 'toolchains')
       Dir.glob("#{builtin_path}/*.rake").each do |file|
         Kernel.load file
       end
@@ -26,4 +29,3 @@ module Magica
 
   Toolchain.load
 end
-
