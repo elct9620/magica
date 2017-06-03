@@ -15,7 +15,7 @@ module Magica
     COMPILERS = %w(cc cxx)
     COMMANDS = COMPILERS + %w(linker git)
 
-    attr_reader :options
+    attr_reader :options, :defines, :include_paths, :flags
     attr_block COMMANDS
 
     Exts = Struct.new(:object, :executable, :library)
@@ -71,7 +71,7 @@ module Magica
         name.flatten.map { |n| define(n, value) }
       else
         _define = name.to_s.upcase
-        value = '\"%{value}\"' % {value: value} unless value.is_a?(Fixnum)
+        value = '\"%{value}\"' % {value: value} unless value.is_a?(Numeric)
         _define << "=#{value}" unless value.nil?
         @defines << _define
       end
@@ -205,17 +205,19 @@ module Magica
     end
 
     def compile(source)
+      return if Rake::Task.task_defined?(objfile(source))
       file objfile(source) => source do |t|
-        Build.current = Magica.builds[@name]
-        @compiler.run t.name, t.prerequisites.first, @defines, @include_paths, @flags
+        @compiler.run t.name, t.prerequisites.first, Build.current.defines, Build.current.include_paths, Build.current.flags
       end
     end
 
     def link(exec, objects)
       desc "Build #{@name}'s executable file"
-      task "#{@name}" => @dependencies + objects  do
+      task "#{@name}" do
         Build.current = Magica.builds[@name]
-        @linker.run "#{exec}", objects + @static_libraries, @libraries, @library_paths, @flags
+        task "#{@name}:build" => @dependencies + objects do
+          @linker.run "#{exec}", objects + @static_libraries, @libraries, @library_paths, @flags
+        end.invoke
       end
     end
 

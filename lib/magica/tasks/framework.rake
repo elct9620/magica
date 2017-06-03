@@ -9,3 +9,9 @@ task :_all do |t|
     end
   end
 end
+
+task :environment do |t|
+  p "ENV ===>"
+  p Magica::Build.current
+  t.reenable
+end
