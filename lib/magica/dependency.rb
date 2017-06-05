@@ -1,5 +1,6 @@
 module Magica
   # :nodoc:
+  # rubocop:disable Metrics/ClassLength
   class Dependency
     class << self
       def [](name)
@@ -16,7 +17,8 @@ module Magica
     include Rake::DSL
 
     # rubocop:disable Metrics/MethodLength
-    def initialize(name, _options = {}, &block)
+    def initialize(builder, name, _options = {}, &block)
+      @builder = builder
       @name = name.to_s
       @vcs = nil
       @command = :git
@@ -31,6 +33,8 @@ module Magica
 
       Dependency[name] = self
       Dependency[name].instance_eval(&block)
+
+      add_header "#{@dir}/include" if Dir.exist?("#{@dir}/include")
     end
     # rubocop:enable Metrics/MethodLength
 
@@ -67,14 +71,21 @@ module Magica
     end
 
     def build(builder)
-      options = builder.send(:options)
-      clean if options[:clean_all]
+      clean if @builder.options[:clean_all]
 
-      return if !options[:clean_all] & File.exist?(@install_dir)
+      return unless exec?
 
       setup_environment
       clone(builder)
       exec
+    end
+
+    def add_src(*paths)
+      @builder.source(@builder.sources + paths)
+    end
+
+    def add_header(*paths)
+      @builder.include_path(paths)
     end
 
     def static_libraries
@@ -87,10 +98,17 @@ module Magica
 
     private
 
+    def exec?
+      clean_all = @builder.options[:clean_all]
+      return false if !clean_all & File.exist?(@install_dir)
+      return false if !clean_all & @build_command.empty? & File.exist?(@dir)
+      true
+    end
+
     def exec
       root = Dir.pwd
       Dir.chdir source_dir
-      sh @build_command, verbose: false
+      sh @build_command, verbose: false unless @build_command.empty?
       Dir.chdir root
     end
 

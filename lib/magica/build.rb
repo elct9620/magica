@@ -17,7 +17,7 @@ module Magica
     COMPILERS = %w[cc cxx].freeze
     COMMANDS = COMPILERS + %w[linker git]
 
-    attr_reader :options, :defines, :include_paths, :flags
+    attr_reader :sources, :options, :defines, :include_paths, :flags
     attr_block COMMANDS
 
     Exts = Struct.new(:object, :executable, :library)
@@ -139,7 +139,7 @@ module Magica
     end
 
     def dependency(name, options = {}, &block)
-      Dependency.new(name, options, &block)
+      Dependency.new(self, name, options, &block)
       desc "The targets #{@name}'s dependency project : #{name}"
       task "#{@name}:dependency:#{name}" do
         Dependency[name].build(self)
