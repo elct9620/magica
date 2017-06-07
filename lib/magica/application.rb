@@ -46,7 +46,7 @@ module Magica
         switch =~ /--#{Regexp.union(not_applicable_to_magica)}/
       end
 
-      super.push(version, clean, clean_all, target)
+      super.push(version, clean, clean_all, rebuild, target)
     end
 
     def top_level_tasks
@@ -96,6 +96,14 @@ module Magica
        lambda do |_value|
          options.clean = true
          options.clean_all = true
+       end]
+    end
+
+    def rebuild
+      ['--rebuild', '-r',
+       'Rerun all dependency build command',
+       lambda do |_value|
+         options.rebuild = true
        end]
     end
 

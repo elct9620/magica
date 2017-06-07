@@ -70,13 +70,13 @@ module Magica
       @static_libraries.push(*name.flatten)
     end
 
-    def build(builder)
+    def build
       clean if @builder.options[:clean_all]
 
       return unless exec?
 
       setup_environment
-      clone(builder)
+      clone
       exec
     end
 
@@ -100,6 +100,7 @@ module Magica
 
     def exec?
       clean_all = @builder.options[:clean_all]
+      return true if @builder.options[:rebuild]
       return false if !clean_all & File.exist?(@install_dir)
       return false if !clean_all & @build_command.empty? & File.exist?(@dir)
       true
@@ -112,8 +113,10 @@ module Magica
       Dir.chdir root
     end
 
-    def clone(builder)
-      @vcs = builder.send(@command)
+    # rubocop:disable Metrics/MethodLength
+    def clone
+      return if @builder.options[:rebuild]
+      @vcs = @builder.send(@command)
       @vcs.flags = %w[--quiet]
 
       puts "UPDATE DEPENDENCY\t #{[@name, @version].join(' ')}"
@@ -126,6 +129,7 @@ module Magica
         checkout if @version
       end
     end
+    # rubocop:enable Metrics/MethodLength
 
     def checkout
       @vcs.checkout(source_dir, @version)

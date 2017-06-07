@@ -142,7 +142,7 @@ module Magica
       Dependency.new(self, name, options, &block)
       desc "The targets #{@name}'s dependency project : #{name}"
       task "#{@name}:dependency:#{name}" do
-        Dependency[name].build(self)
+        Dependency[name].build
       end
       @dependencies << "#{@name}:dependency:#{name}"
       @static_libraries.push(*Dependency[name].static_libraries)
