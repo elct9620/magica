@@ -27,6 +27,7 @@ module Magica
       @dir = "lib/#{@name}"
       @install_dir = "#{@dir}/build"
       @build_command = 'make'
+      @clean_command = ''
       @environments = {}
 
       @static_libraries = []
@@ -64,6 +65,10 @@ module Magica
 
     def command(command)
       @build_command = command.to_s
+    end
+
+    def clean_command(command)
+      @clean_command = command.to_s
     end
 
     def static_library(*name)
@@ -150,7 +155,11 @@ module Magica
     end
 
     def clean
-      FileUtils.rm_r(@install_dir, force: true)
+      return FileUtils.rm_r(@install_dir, force: true) if @clean_command.empty?
+      root = Dir.pwd
+      Dir.chdir source_dir
+      sh @clean_command, verbose: false
+      Dir.chdir root
     end
   end
 end
